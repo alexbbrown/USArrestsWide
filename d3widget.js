@@ -3,7 +3,7 @@
 (function(){
   // Probably not idiomatic javascript.
 
-  this.countValue=42;
+  this.countValue=0;
   
   updateView = function(message) {
     
@@ -15,8 +15,10 @@
       .attr("y",message[1])
       .text(countValue)
       .each("end",function(){
-        countValue+=1;
-        $(".d3io").trigger("change");
+        if (countValue < 100) {
+          countValue+=1;
+          $(".d3io").trigger("change");
+        }
       })
   }
   
@@ -26,12 +28,9 @@
       return $(scope).find(".d3io");
     },
     renderError: function(el,error) {
-      console.log("Foe");
     },
     renderValue: function(el,data) {
       updateView(data);
-      console.log("Friend");
-      
     }
   });
   Shiny.outputBindings.register(d3OutputBinding);
