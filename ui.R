@@ -23,7 +23,7 @@ shinyUI(pageWithSidebar(
     ),
   
   mainPanel(
-    includeHTML("d3widget.js"),
+    includeHTML("d3widgetscripts.html"),
     d3IO("d3io")
   )
     ))

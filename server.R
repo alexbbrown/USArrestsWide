@@ -1,4 +1,6 @@
 library(shiny)
+library(reshape2)
+options(max.print=20)
 
 # Goals:
 # demonstrate construction of description of data
@@ -12,12 +14,12 @@ data(USArrests)
 
 # Join state data together
 myArrests <- USArrests
-USArrests$State <- row.names(USArrests)
+myArrests$State <- row.names(myArrests)
 # with extra information about the state (key)
 stateInfo <- data.frame(Division=state.division,State=state.name)
-myArrests <- merge(myArrests,stateInfo)
+myArrests.merged <- merge(myArrests,stateInfo)
 # discard unwanted columns:
-myArrests$UrbanPop <- NULL
+myArrests.merged$UrbanPop <- NULL
 
 # start to build the data and metadata to upload
 uploadData=list()
@@ -28,7 +30,7 @@ uploadData=list()
 # data numeric data thus sent.
 # note also that this makes a structure indistinguishable 
 # from a 'sparse' matrix (even though it isn't)
-uploadData$table <- melt(myArrests, measure.vars=c("Murder", "Assault", "Rape"),
+uploadData$table <- melt(myArrests.merged, measure.vars=c("Murder", "Assault", "Rape"),
                          variable.name="Crime",value.name="Count")
 
 # categorise the columns into key and response variables.
@@ -37,13 +39,16 @@ uploadData$table <- melt(myArrests, measure.vars=c("Murder", "Assault", "Rape"),
 # we could also view these are being partitions of data - 
 # location is hierarchical, crime is flat.
 uploadData$structure <- list(Location=list("Division", "State"),
-     Crime=list("Crime")) # only one hierarchy level, so simple.
+     Crime=list("Crime"), # only one hierarchy level, so simple.
+     Measure=list("Count")) # for completeness
 
 # build an aesthetic mapping from the data structure to x, y, etc.
 # Note that the aesthetic only applies to one view of the data - it's likely there will
 # be multiple sensible ones, possibly multiple in the same graph.
 # group here is going to mean ggplot's group, position="stack".
 uploadData$aesthetic <- list(x="Location", y="Count", group="Crime")
+
+browser();
 
 # I guess we could do some 'compression' here - by representing the data as a cube
 # for non-sparse data, or transmitting the factors in a representation closer to 
