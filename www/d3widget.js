@@ -31,27 +31,50 @@
     return data
   }
   
-  // generate a function to
-  // walk over an object, creating an object with 
-  // the same keys but the value if f(input value)
-  var mapObjectF = function(f) { return function(obj, context) {
-      return _.object(_.keys(obj), _.map(_.values(obj), f, context));      
-  }}
+  // The I combinator
+  function identityF() { return function identity(x){return x} }
   
-  // make a function which:
-  // applies a different function to an object or to an array
-  var applyObjectArrayOtherF = function(objF, arrayF, otherF) { return function(val) {
+  // Apply a different function depending upon the type of the argument:
+  // Object/Array/Other.  Treats this as an argument to pass on.
+  // relies on caller invoking returned function using:
+  // applyObjectArrayOtherF.call(context,a,b,c) to load this properly
+  function applyObjectArrayOtherF(objF, arrayF, otherF) { return function(val) {
     // map context is passed in as this
     return _.isArray(val) ? arrayF(val, this) : 
            _.isObject(val) ? objF(val, this) :
             otherF(val, this);
   }}
   
+  // Apply a function to every property of an object and return
+  // the object constructed out of the results with the same keys
+  // pass a context object too.
+  function mapObjectF(f) { return function(obj, context) {
+      return _.object(_.keys(obj), _.map(_.values(obj), f, context));      
+  }}
+  
+  function mapArrayF(f) { return function(obj, context) {
+    return _.map(obj, f, context);
+  }}
+  
+  var mapValueF = identityF;
+  
+  function mapAnythingF(f) {
+    return applyObjectArrayOtherF(
+      mapObjectF(f),
+      mapArrayF(f),
+      mapValueF(f)
+      )
+  }
+  
   // Something like the Y combinator for these functions
   // allows recursion on subobjects.
-  var objectRecurse=function(val,f) {
+  var recurse=function(val,f) {
     return f(val,f);
-  }
+  }  
+
+  
+  // The K combinator
+  function constantly(val) { return function() { return val }}
   
   var mapStruct = function(struct, f, context) {
     
@@ -74,8 +97,19 @@
     //plotData = aestheticData(lastData,message$aesthetic)
     
     var T=function(x){return typeof(x)}
-    var Q=mapObjectF(applyObjectArrayOtherF(objectRecurse,_.size,function(x){return x}))
+
+    var Q=mapObjectF(applyObjectArrayOtherF(recurse,_.size,identityF()))
     Q(message,Q)
+    var Q2=mapAnythingF(applyObjectArrayOtherF(recurse,recurse,function(x){return ">"+x}))
+    Q2(message,Q2)
+    // Q2 breaks because of the behaviour of THIS and how mapAnythingF relies on
+    // applyObjectArrayOtherF and it's behaviour wrt this.  need to example carefully.
+    var Q3=mapObjectF(applyObjectArrayOtherF(recurse,recurse,function(x){return ">"+x}))
+    
+    T2=function(D){return mapObjectF(applyObjectArrayOtherF(recurse,recurse,D))}
+    T3=function(container){return T2(container,T2)}
+    M=function(C){return function(m){return C[m]}}
+    T2(M(message.table))(message.structure)
     
     var svg = d3.select(".d3io").select("svg")
 
