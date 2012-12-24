@@ -31,16 +31,51 @@
     return data
   }
   
+  // generate a function to
+  // walk over an object, creating an object with 
+  // the same keys but the value if f(input value)
+  var mapObjectF = function(f) { return function(obj, context) {
+      return _.object(_.keys(obj), _.map(_.values(obj), f, context));      
+  }}
+  
+  // make a function which:
+  // applies a different function to an object or to an array
+  var applyObjectArrayOtherF = function(objF, arrayF, otherF) { return function(val) {
+    // map context is passed in as this
+    return _.isArray(val) ? arrayF(val, this) : 
+           _.isObject(val) ? objF(val, this) :
+            otherF(val, this);
+  }}
+  
+  // Something like the Y combinator for these functions
+  // allows recursion on subobjects.
+  var objectRecurse=function(val,f) {
+    return f(val,f);
+  }
+  
+  var mapStruct = function(struct, f, context) {
+    
+  }  
+  // Convert column major structure to row major
+  var zipStruct = function(data) {
+    
+  }
+  
   // comprehend a data set using an aesthetic
   var aestheticData = function(data, aesthetic) {
-    
+    // aesthetic is like structure, but it queries structure?
   }
   
   var updateView = function(message) {
     
     lastMessage = message;
     lastData = decodeData(message);
-    plotData = aestheticData(lastData,message$aesthetic)
+    // rowfiy?
+    //plotData = aestheticData(lastData,message$aesthetic)
+    
+    var T=function(x){return typeof(x)}
+    var Q=mapObjectF(applyObjectArrayOtherF(objectRecurse,_.size,function(x){return x}))
+    Q(message,Q)
     
     var svg = d3.select(".d3io").select("svg")
 
