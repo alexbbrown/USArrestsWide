@@ -6,7 +6,7 @@
   this.lastData=undefined;
   
   // decode an input data set from a message
-  var decodeData = function(message) {
+  function decodeData(message) {
     // check it's the right format
     if (undefined == message ||
         undefined == message.table ||
@@ -35,38 +35,66 @@
     return records;
   }
   
-  // comprehend a data set using an aesthetic
-  var applyAesthetic = function(data, aesthetic) {
+   function applyAesthetic(aesthetic) { return function(record) {
     // aesthetic is like structure, but it queries structure?
     aesWalker = structureWalker()
-
-    function aesFromRecord(record) {
-      return aesWalker.array(
-        // for each aesthetic, find the corresponding data item by 
-        // dereference path in the data.
-        aesWalker.atPath(record)
-        )
-        .other(
-        // for simple strings, the path is simple:
-        aesWalker.memberOf(record)
-        )(aesthetic)
+     
+    return aesWalker.array(
+      // for each aesthetic, find the corresponding data item by 
+      // dereference path in the data.
+      aesWalker.atPath(record)
+      )
+      .other(
+      // for simple strings, the path is simple:
+      aesWalker.memberOf(record)
+      )(aesthetic)
+  }}
+  
+  // build x position as a hierarchy diagram with size
+  // width, height
+  function hierarchX(allData,xaesthetic,width,height) {
+    var nester = d3.nest()
+    // load the nester with the xaesthetic keys.
+    // if xaesthetic is 
+    var dataTree = {key:"All", values:
+      _.keys(xaesthetic).reduce(
+        function(nest,xkey){
+          return nest.key(
+            function(data){
+              return data.x[xkey]
+      })},nester).entries(allData)
     }
     
-    aesData = data.map(aesFromRecord)
-    
-    return aesData
+    function constantly(x) { return function() { return x } }
+    function maxdepth(x) { return function(d) { 
+      if (d.depth > x) { 
+        return null
+      } else {
+        return d.values
+      }
+    }}
+  
+    var partition = d3.layout.partition()
+      .value(constantly(1))
+      .sort(null)
+      .size([width, height])
+      .children(maxdepth(xaesthetic.length))
+      
+    // note: x and y of allData are blown away by this.
+    return partition.nodes(dataTree)
   }
   
-  var updateView = function(message) {
+  function updateView(message) {
     
     lastMessage = message;
     // generate col major structured records
     lastData = decodeData(message);
     // create records with fields x,y,group from data
-    aesData = applyAesthetic(lastData,message.aesthetic)
-      
-    // build aesthetic version of data
-    
+    aesData = lastData.map(applyAesthetic(message.aesthetic))
+    // derive effective structure of aesthetic
+    aesStructure = applyAesthetic(message.aesthetic)(message.structure)
+    // build the hierarchic x axis
+    h = hierarchX(aesData, aesStructure.x, 100, 100)
     
     var svg = d3.select(".d3io").select("svg")
 
