@@ -38,7 +38,7 @@ uploadData$table <- melt(myArrests.merged, measure.vars=c("Murder", "Assault", "
 # but here I have arranged for ONE nested key
 # we could also view these are being partitions of data - 
 # location is hierarchical, crime is flat.
-uploadData$structure <- list(Location=list(Division="Division", State="State"),
+uploadData$structure <- list(Location=c("Division","State"),
      Crime="Crime", # only one hierarchy level, so simple.
      Measure=list(Count="Count")) # for completeness
 
