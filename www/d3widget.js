@@ -61,13 +61,13 @@
         function(nest,xkey){
           return nest.key(
             function(data){
-              return data.x[xkey]
+              return data["X"][xkey]
       })},nester).entries(allData)
     }
     
-    function constantly(x) { return function() { return x } }
-    function maxdepth(x) { return function(d) { 
-      if (d.depth > x) { 
+    function constantly(value) { return function() { return value } }
+    function maxdepth(maxdepth) { return function(d) { 
+      if (d.depth > maxdepth) {
         return null
       } else {
         return d.values
@@ -78,7 +78,7 @@
       .value(constantly(1))
       .sort(null)
       .size([width, height])
-      .children(maxdepth(xaesthetic.length))
+      .children(maxdepth(xaesthetic.length-1))
       
     // note: x and y of allData are blown away by this.
     return partition.nodes(dataTree)
@@ -94,7 +94,7 @@
     // derive effective structure of aesthetic
     aesStructure = applyAesthetic(message.aesthetic)(message.structure)
     // build the hierarchic x axis
-    h = hierarchX(aesData, aesStructure.x, 100, 100)
+    h = hierarchX(aesData, aesStructure.X, 100, 100)
     
     var svg = d3.select(".d3io").select("svg")
 

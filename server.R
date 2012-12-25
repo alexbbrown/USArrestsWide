@@ -46,7 +46,9 @@ uploadData$structure <- list(Location=c("Division","State"),
 # Note that the aesthetic only applies to one view of the data - it's likely there will
 # be multiple sensible ones, possibly multiple in the same graph.
 # group here is going to mean ggplot's group, position="stack".
-uploadData$aesthetic <- list(x="Location", y=list("Measure","Count"), group=list("Crime"))
+# X and Y are capitalized to distinguish them from later screen-based calculations
+# which produce x and y in javascript (d3.partition will overwrite "x" and "y")
+uploadData$aesthetic <- list(X="Location", Y=list("Measure","Count"), group=list("Crime"))
 
 #browser();
 
