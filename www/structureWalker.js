@@ -105,5 +105,19 @@ function structureWalker() {
     return walk;
   }
   
+  // Utility functions:
+  // Extract data at a path in an object
+  walk.atPath = function(structure){ return function(path) {
+    return _.reduce(path,function(structure,member){return structure[member]},structure)
+  }}
+  
+  walk.memberOf = function(thing){ return function(member) {
+    return thing[member]
+  }}
+  
+  walk.indexedMemberOf = function(thing,index){ return function(member) {
+    return thing[member][index]
+  }}
+
   return walk;
 }

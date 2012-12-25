@@ -16,53 +16,56 @@
         return undefined;
       }
     var structure = message.structure;
+    var recordWalker=structureWalker(); // a new walker
 
-    // transform the column-major data set into column-major
-    // structured data.
-    function tableMember(x){return message.table[x]};
-    //data = 
-    //  structureWalker()
-    //    .other(tableMember)
-    //    (structure)
-    
-    // a function which takes an object of arrays and an index
-    // and returns a function which takes an array and returns
-    // the element at that index
-    function arrayIndex(structure,index){return function(array){return structure[array][index]}}
     // transform the column-major data set (object of arrays)
     // and returns a set of structured records according to structure
     // for a particular index:
-    recordWalker=structureWalker()
     function buildRecord(index){ 
-      return recordWalker.other(arrayIndex(message.table,index))(structure);
+      return recordWalker.other(
+        // for each string S in structure, pull out the indexed element
+        // of the array named S in data.
+        recordWalker.indexedMemberOf(message.table,index))(structure);
     }
     // the number of records:
     var recordCount = _.values(message.table)[0].length
+    // use the walker to map the structure onto the data
     var records = d3.range(0,recordCount).map(buildRecord)
     
     return records;
   }
   
-  
-
-  
-  // Convert column major structure to row major
-  var zipStruct = function(data) {
-    
-  }
-  
   // comprehend a data set using an aesthetic
-  var aestheticData = function(data, aesthetic) {
+  var applyAesthetic = function(data, aesthetic) {
     // aesthetic is like structure, but it queries structure?
+    aesWalker = structureWalker()
+
+    function aesFromRecord(record) {
+      return aesWalker.array(
+        // for each aesthetic, find the corresponding data item by 
+        // dereference path in the data.
+        aesWalker.atPath(record)
+        )
+        .other(
+        // for simple strings, the path is simple:
+        aesWalker.memberOf(record)
+        )(aesthetic)
+    }
+    
+    aesData = data.map(aesFromRecord)
+    
+    return aesData
   }
   
   var updateView = function(message) {
     
     lastMessage = message;
+    // generate col major structured records
     lastData = decodeData(message);
-    // rowfiy?
-    //plotData = aestheticData(lastData,message$aesthetic)
-    
+    // create records with fields x,y,group from data
+    aesData = applyAesthetic(lastData,message.aesthetic)
+      
+    // build aesthetic version of data
     
     
     var svg = d3.select(".d3io").select("svg")

@@ -38,17 +38,17 @@ uploadData$table <- melt(myArrests.merged, measure.vars=c("Murder", "Assault", "
 # but here I have arranged for ONE nested key
 # we could also view these are being partitions of data - 
 # location is hierarchical, crime is flat.
-uploadData$structure <- list(Location=list("Division", "State"),
-     Crime=list("Crime"), # only one hierarchy level, so simple.
-     Measure=list("Count")) # for completeness
+uploadData$structure <- list(Location=list(Division="Division", State="State"),
+     Crime="Crime", # only one hierarchy level, so simple.
+     Measure=list(Count="Count")) # for completeness
 
 # build an aesthetic mapping from the data structure to x, y, etc.
 # Note that the aesthetic only applies to one view of the data - it's likely there will
 # be multiple sensible ones, possibly multiple in the same graph.
 # group here is going to mean ggplot's group, position="stack".
-uploadData$aesthetic <- list(x="Location", y="Count", group="Crime")
+uploadData$aesthetic <- list(x="Location", y=list("Measure","Count"), group=list("Crime"))
 
-browser();
+#browser();
 
 # I guess we could do some 'compression' here - by representing the data as a cube
 # for non-sparse data, or transmitting the factors in a representation closer to 
