@@ -79,9 +79,15 @@
   // The K combinator
   function constantlyF(val) { return function constantly() { return val }}
   
-  var mapStruct = function(struct, f, context) {
-    
-  }  
+  // Walk a structure composed of objects arrays and elements, and apply
+  // one of the functions on each type.  Specify recurse to continue walking into
+  // the object.
+  function structureWalker(objFn,arrayFn,otherFn) {
+    return mapAnythingF(
+      applyObjectArrayOtherF(
+        objFn,arrayFn,otherFn));
+  }
+  
   // Convert column major structure to row major
   var zipStruct = function(data) {
     
