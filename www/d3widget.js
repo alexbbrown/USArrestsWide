@@ -105,17 +105,15 @@
     //Q(message,Q)
     var Q2=mapAnythingF(applyObjectArrayOtherF(recurse,recurse,function(x){return ">"+x}));
     var testStr = {a: [1,2,3], b: {a: "alex", b: "bob"}, c: "hello"};
-    Q2.call(testStr,Q2)
-    Q2.call(Q2,message,Q2)
-    Q2(message,Q2)
-    // Q2 breaks because of the behaviour of THIS and how mapAnythingF relies on
-    // applyObjectArrayOtherF and it's behaviour wrt this.  need to example carefully.
-    var Q3=mapObjectF(applyObjectArrayOtherF(recurse,recurse,function(x){return ">"+x}))
+    
+    // call recurse on one of these functions
+    recurse(message,Q)
+    recurse(message,Q2)
     
     T2=function(D){return mapObjectF(applyObjectArrayOtherF(recurse,recurse,D))}
     T3=function(container){return T2(container,T2)}
     M=function(C){return function(m){return C[m]}}
-    T2(M(message.table))(message.structure)
+    recurse(message.structure,T2(M(message.table)))
     
     var svg = d3.select(".d3io").select("svg")
 
