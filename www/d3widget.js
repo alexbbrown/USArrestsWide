@@ -163,9 +163,10 @@
       .append("g")
       .each(function() {
         var s = d3.select(this)
-        s.append("rect").attr("class", "haxis")
         s.append("foreignObject").attr("class","htmltextF")
           .append("xhtml:body").attr("class","htmltext").attr("xmlns","http://www.w3.org/1999/xhtml")
+        s.append("line").attr("class", "leftline tick")
+        s.append("line").attr("class", "rightline tick")
         s.append("title")
       })
       .attr("transform", function(d){
@@ -177,14 +178,28 @@
       .attr("transform", function(d){
           return "translate(" + d.x + "," + (height-d.y-d.dy) + ")"
         })
+      .each(function(d) {
+        d3.select(this).select(".leftline")
+          .attr("x1",0)
+          .attr("y1",0)
+          .attr("x2",0)
+          .attr("y2",function(d) { return d.dy; })
+        d3.select(this).select(".rightline")
+          .attr("x1",function(d) { return d.dx; })
+          .attr("y1",0)
+          .attr("x2",function(d) { return d.dx; })
+          .attr("y2",function(d) { return d.dy; })
+        return d;
+      })
+      /*
       .select("rect")
         .attr("x", 1 )
         .attr("y", 2 )
         .attr("width", function(d) { return d.dx-2; })
         .attr("height", function(d) { return d.dy-1; })
         .style("fill", function(d) { return colorScale(d.depth); })
-     
-    rect
+     */
+     rect
       .select("title")
       .text( function(d) { return d.key } );
        
@@ -194,17 +209,11 @@
       .attr("height", function(d) { return d.dy-1; })
       .attr("x", 1)
       .attr("y", 2)
-      .style("text-anchor", "middle")
       .select(".htmltext")
       .style("font", "14px 'Helvetica Neue'")
       .style("background-color", "transparent")
       .style("text-align","center")
-
       .html(function(d) { return d.key; });
-     // .attr("visibility",function(d){
-      //   return d.dx>80?"visible":"hidden"}
-      //   )
-    
 
     rect.exit()
       .transition()
