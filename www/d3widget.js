@@ -73,7 +73,7 @@
         return d.values
       }
     }}
-  
+      
     var partition = d3.layout.partition()
       .value(constantly(1))
       .sort(null)
@@ -84,8 +84,68 @@
     return partition.nodes(dataTree)
   }
   
+  // Do calculation for stacked bars
+  function barStack(allData, groupAesthetic) {
+
+    var barStack=d3.layout.stack()
+      .values(function(d) {return d.values})
+      .y(function(d) {return d.Y})
+      .x(function(d) {
+        return d.parent.x
+      })
+     
+    var dnest=d3.nest().key(function(d) {return d[groupAesthetic]; })
+      //.key(function(d) { return d.label; })
+      .entries(allData)
+    // WARNING: the input data needs an x,y array of the same length for each
+    // level, otherwise "TypeError: Cannot read property '1' of undefined"
+    // i.e. don't drop zeroes. (unless a whole column is 0)
+   
+    // running mystack calculates the y position, and updates the original data.
+    nest_data=barStack(dnest)
+  
+    return nest_data // but it modifies data, so no worries.
+  }
+  
+  function barDraw(svg,bardata,x,y,color) {
+ 
+      var a = svg.selectAll("rect.bar")
+         .data(bardata,function(d){
+           return d.X + d.group
+         })  // metric really
+ 
+       a.exit().transition()
+        .attr("height", 0)
+        .attr("y", y(0))
+        .attr("width", 0)
+        .remove()
+      a.enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d) { return d.dx; })
+        .attr("y", y(0))
+        .attr("height",0)
+        .append("title");
+ 
+      var padding = .1;
+      a.transition()
+        .attr("x", function(d) { return d.parent.x + d.parent.dx/20; })
+        .attr("width", function(d) { return d.parent.dx*(1-padding); })
+        // negative coordinate heights are a pain
+        .attr("y", function(d) { return y(d.y0 + d.y) })
+        .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y) })
+        .style("fill", function(d) { return color(d.group); })
+        .select("title").text( function(d) { return d.X.reduce(function(a,b){return a+"\n"+b})+"\n"+d.group } );
+    }
+
+  
   function updateView(message) {
     
+    var svg = d3.select(".d3io").select("svg").append("g").attr("transform", "translate(" + 20 + "," + 20 + ")");
+
+    var height=400
+    var width=400
+
     lastMessage = message;
     // generate col major structured records
     lastData = decodeData(message);
@@ -95,18 +155,31 @@
     aesStructure = applyAesthetic(message.aesthetic)(message.structure)
     // build the hierarchic x axis
     h = hierarchX(aesData, aesStructure.X, 100, 100)
+    s = barStack(aesData, "group")
     
-    var svg = d3.select(".d3io").select("svg")
+    // Scales.  X is not a 'proper' scale - needs work
+    var x = function(d){
+      return d
+    }
+    // Y is linear including 0, which is appropriate for bars
+    var y = d3.scale.linear()
+          .range([height, 0])
+          .domain(d3.extent(aesData.concat({y:0}), function(d) { return ((d.y0+d.y)||d.y); })).nice();
+    var color = d3.scale.category20();
+    var hierColor = d3.scale.category20();
+    
+    // Axes
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom")
+   
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .tickFormat(d3.format(".2s"))
+        .orient("left");
+    
 
-    svg.append("text")
-      .transition()
-      .attr("x",message[0])
-      .attr("y",message[1])
-      .text(countValue)
-      .each("end",function(){
-        countValue+=1;
-        $(".d3io").trigger("change");
-      })
+    barDraw(svg,aesData,x,y,color)
   }
   
   var d3OutputBinding = new Shiny.OutputBinding();
