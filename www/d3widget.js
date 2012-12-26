@@ -74,10 +74,15 @@
       }
     }}
       
+    // the height used for y partitioning needs to take into account the
+    // values row (which we aren't using, and the All row, which isn't in
+    // the origianl aesthetic), hence it's height*(n+2)/(n+1)
+    var adjustedHeight = height * (xaesthetic.length+2)/(xaesthetic.length+1)
+      
     var partition = d3.layout.partition()
       .value(constantly(1))
       .sort(null)
-      .size([width, height])
+      .size([width, adjustedHeight])
       .children(maxdepth(xaesthetic.length-1))
       
     // note: x and y of allData are blown away by this.
@@ -155,15 +160,16 @@
     rect
       .enter()
       .append("g")
-      .append("rect").attr("class", "haxis")
-     
-    // need to find a way to enable/disable these 
-    rect
-      .append("text").attr("class", "haxislabel")
-     
-    rect
-      .append("title")
-    
+      .each(function() {
+        var s = d3.select(this)
+        s.append("rect").attr("class", "haxis")
+        s.append("text").attr("class", "haxislabel")
+        s.append("title")
+      })
+      .attr("transform", function(d){
+          return "translate(" + d.x + "," + (height-d.y-d.dy) + ")"
+        })
+
     rect
       .transition()
       .attr("transform", function(d){
@@ -171,8 +177,8 @@
         })
       .select("rect")
         .attr("x", 1 )
-        .attr("y", 1 )
-        .attr("width", function(d) { return d.dx-1; })
+        .attr("y", 2 )
+        .attr("width", function(d) { return d.dx-2; })
         .attr("height", function(d) { return d.dy-1; })
         .style("fill", function(d) { return colorScale(d.depth); })
      
@@ -186,9 +192,9 @@
       .attr("y", function(d) { return 7*d.dy/10 ; })
       .style("text-anchor", "middle")
       .style("fill", "white")
-      .attr("visibility",function(d){
-         return d.dx>80?"visible":"hidden"}
-         )
+     // .attr("visibility",function(d){
+      //   return d.dx>80?"visible":"hidden"}
+      //   )
     
       .text(function(d) { return d.key; });
 
@@ -202,7 +208,7 @@
     var svg = d3.select(".d3io").select("svg")
 
     var hieraxis_height=100
-    var margin = {top: 20, right: 10, bottom: 20+hieraxis_height, left: 10};
+    var margin = {top: 20, right: 10, bottom: 20+hieraxis_height, left: 40};
     var height=svg.node().clientHeight-margin.bottom-margin.top
     var width=svg.node().clientWidth-margin.left-margin.right
 
@@ -232,7 +238,7 @@
           .range([height, 0])
           .domain(d3.extent(aesData.concat({y:0}), function(d) { return ((d.y0+d.y)||d.y); })).nice();
     var color = d3.scale.category20();
-    var hierColor = d3.scale.category20();
+    var hierColor = d3.scale.category10();
     
     // Axes
     var xAxis = d3.svg.axis()
@@ -248,6 +254,14 @@
     barDraw(plot,aesData,x,y,color)
     hierAxis(plot,h,hierColor,height,hieraxis_height)
 
+    plot.select(".yaxis")
+      .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text( message.aesthetic.Y[1] )
   }
   
   var d3OutputBinding = new Shiny.OutputBinding();
