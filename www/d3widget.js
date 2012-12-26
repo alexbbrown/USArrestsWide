@@ -107,12 +107,15 @@
     return nest_data // but it modifies data, so no worries.
   }
   
+  // draw the stacked bars
   function barDraw(svg,bardata,x,y,color) {
  
       var a = svg.selectAll("rect.bar")
          .data(bardata,function(d){
            return d.X + d.group
          })  // metric really
+ 
+       var padding = .05;
  
        a.exit().transition()
         .attr("height", 0)
@@ -122,15 +125,16 @@
       a.enter()
         .append("rect")
         .attr("class", "bar")
-        .attr("x", function(d) { return d.dx; })
+        .attr("x", function(d) { return d.parent.x + d.parent.dx; })
+        .attr("width", function(d) { return d.parent.dx*(1-2*padding); })
         .attr("y", y(0))
         .attr("height",0)
+        .style("fill", function(d) { return color(d.group); })
         .append("title");
  
-      var padding = .1;
       a.transition()
-        .attr("x", function(d) { return d.parent.x + d.parent.dx/20; })
-        .attr("width", function(d) { return d.parent.dx*(1-padding); })
+        .attr("x", function(d) { return d.parent.x + d.parent.dx*(padding); })
+        .attr("width", function(d) { return d.parent.dx*(1-2*padding); })
         // negative coordinate heights are a pain
         .attr("y", function(d) { return y(d.y0 + d.y) })
         .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y) })
@@ -140,11 +144,15 @@
 
   
   function updateView(message) {
-    
-    var svg = d3.select(".d3io").select("svg").append("g").attr("transform", "translate(" + 20 + "," + 20 + ")");
 
-    var height=400
-    var width=400
+    var svg = d3.select(".d3io").select("svg")
+
+    var hieraxis_height=50
+    var margin = {top: 20, right: 10, bottom: 20+hieraxis_height, left: 10};
+    var height=svg.node().clientHeight-margin.bottom-margin.top
+    var width=svg.node().clientWidth-margin.left-margin.right
+
+    var plot = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     lastMessage = message;
     // generate col major structured records
@@ -154,7 +162,7 @@
     // derive effective structure of aesthetic
     aesStructure = applyAesthetic(message.aesthetic)(message.structure)
     // build the hierarchic x axis
-    h = hierarchX(aesData, aesStructure.X, 100, 100)
+    h = hierarchX(aesData, aesStructure.X, width, hieraxis_height)
     s = barStack(aesData, "group")
     
     // Scales.  X is not a 'proper' scale - needs work
