@@ -3,10 +3,10 @@ library(reshape2)
 options(max.print=20)
 
 # Goals:
-# demonstrate construction of description of data
-# convert from wide to long in d3
-# map from keys and response to x and y in d3
-# show how structured keys might work
+# demonstrate construction of description of data (done)
+# convert from wide to long in d3 (not done)
+# map from keys and response to x and y in d3 (done)
+# show how structured keys might work (done)
 # demonstrate delayed loading of detail data. (not this version)
 
 # Prepare sample data
