@@ -144,18 +144,13 @@
 
   // draw the hierarchical-x axis
   function hierAxis(plot,axisParts,colorScale,y,height) {
+    
+    function hasKeyFilter(key) { return function(d) { return _.has(d,key)}}
+    
     rect=plot.select(".xaxis")
        .attr("transform", "translate(0," + y + ")")
-       .selectAll("g").data(axisParts)
-       .filter(function(d){ return d })
-       /*
-       .filter(function(d) {
-         // don't want to display nodes for group in the hierarchy, just
-         // x.  when we generated axisParts the property key was assigned to
-         // all x levels.
-         return 1;
-         return _.has(d,"key") // the leaves don't have keys. 
-       })*/
+       .selectAll("g")
+       .data(axisParts.filter(hasKeyFilter("key")))
     
     rect
       .enter()
