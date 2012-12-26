@@ -67,7 +67,7 @@
     
     function constantly(value) { return function() { return value } }
     function maxdepth(maxdepth) { return function(d) { 
-      if (d.depth > maxdepth) {
+      if (d.depth > maxdepth) { // this does nothing.  why?
         return null
       } else {
         return d.values
