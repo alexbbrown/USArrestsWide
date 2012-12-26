@@ -140,19 +140,72 @@
         .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y) })
         .style("fill", function(d) { return color(d.group); })
         .select("title").text( function(d) { return d.X.reduce(function(a,b){return a+"\n"+b})+"\n"+d.group } );
-    }
+  }
 
+  // draw the hierarchical-x axis
+  function hierAxis(plot,axisParts,colorScale,y,height) {
+    rect=plot.select(".xaxis")
+       .attr("transform", "translate(0," + y + ")")
+       .selectAll("g").data(axisParts)
+    
+    rect
+      .enter()
+      .append("g")
+      .append("rect").attr("class", "haxis")
+     
+    // need to find a way to enable/disable these 
+    rect
+      .append("text").attr("class", "haxislabel")
+     
+    rect
+      .append("title")
+    
+    rect
+      .transition()
+      .attr("transform", function(d){
+          return "translate(" + d.x + "," + (height-d.y-d.dy) + ")"
+        })
+      .select("rect")
+        .attr("x", 1 )
+        .attr("y", 1 )
+        .attr("width", function(d) { return d.dx-1; })
+        .attr("height", function(d) { return d.dy-1; })
+        .style("fill", function(d) { return colorScale(d.depth); })
+     
+    rect
+      .select("title")
+      .text( function(d) { return d.key } );
+       
+    rect
+      .select("text")
+      .attr("x", function(d) { return d.dx /2; })
+      .attr("y", function(d) { return 7*d.dy/10 ; })
+      .style("text-anchor", "middle")
+      .style("fill", "white")
+      .attr("visibility",function(d){
+         return d.dx>80?"visible":"hidden"}
+         )
+    
+      .text(function(d) { return d.key; });
+
+    rect.exit()
+      .transition()
+      .remove()
+  }
   
   function updateView(message) {
 
     var svg = d3.select(".d3io").select("svg")
 
-    var hieraxis_height=50
+    var hieraxis_height=100
     var margin = {top: 20, right: 10, bottom: 20+hieraxis_height, left: 10};
     var height=svg.node().clientHeight-margin.bottom-margin.top
     var width=svg.node().clientWidth-margin.left-margin.right
 
-    var plot = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    var plot = svg.append("g")
+    plot.append("g").attr("class","xaxis")
+    plot.append("g").attr("class","yaxis")
+    plot.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     lastMessage = message;
     // generate col major structured records
@@ -164,6 +217,7 @@
     // build the hierarchic x axis
     h = hierarchX(aesData, aesStructure.X, width, hieraxis_height)
     s = barStack(aesData, "group")
+    
     
     // Scales.  X is not a 'proper' scale - needs work
     var x = function(d){
@@ -186,8 +240,10 @@
         .tickFormat(d3.format(".2s"))
         .orient("left");
     
+    // start drawing
+    barDraw(plot,aesData,x,y,color)
+    hierAxis(plot,h,hierColor,height,hieraxis_height)
 
-    barDraw(svg,aesData,x,y,color)
   }
   
   var d3OutputBinding = new Shiny.OutputBinding();
