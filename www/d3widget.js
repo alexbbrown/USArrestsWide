@@ -157,13 +157,15 @@
        .selectAll("g")
        .data(axisParts.filter(hasKeyFilter("key")))
     
+    // construct the box elements of the hierarchy out of a g, rect, and an html object (for text wrapping)
     rect
       .enter()
       .append("g")
       .each(function() {
         var s = d3.select(this)
         s.append("rect").attr("class", "haxis")
-        s.append("text").attr("class", "haxislabel")
+        s.append("foreignObject").attr("class","htmltextF")
+          .append("xhtml:body").attr("class","htmltext").attr("xmlns","http://www.w3.org/1999/xhtml")
         s.append("title")
       })
       .attr("transform", function(d){
@@ -187,16 +189,22 @@
       .text( function(d) { return d.key } );
        
     rect
-      .select("text")
-      .attr("x", function(d) { return d.dx /2; })
-      .attr("y", function(d) { return 7*d.dy/10 ; })
+      .select(".htmltextF")
+      .attr("width", function(d) { return d.dx-2; })
+      .attr("height", function(d) { return d.dy-1; })
+      .attr("x", 1)
+      .attr("y", 2)
       .style("text-anchor", "middle")
-      .style("fill", "white")
+      .select(".htmltext")
+      .style("font", "14px 'Helvetica Neue'")
+      .style("background-color", "transparent")
+      .style("text-align","center")
+
+      .html(function(d) { return d.key; });
      // .attr("visibility",function(d){
       //   return d.dx>80?"visible":"hidden"}
       //   )
     
-      .text(function(d) { return d.key; });
 
     rect.exit()
       .transition()
