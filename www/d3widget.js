@@ -191,14 +191,7 @@
           .attr("y2",function(d) { return d.dy; })
         return d;
       })
-      /*
-      .select("rect")
-        .attr("x", 1 )
-        .attr("y", 2 )
-        .attr("width", function(d) { return d.dx-2; })
-        .attr("height", function(d) { return d.dy-1; })
-        .style("fill", function(d) { return colorScale(d.depth); })
-     */
+
      rect
       .select("title")
       .text( function(d) { return d.key } );
@@ -220,6 +213,41 @@
       .remove()
   }
   
+  function legend(plot,colorScale) {
+    var legendPos = {x: 100}
+   
+    var legend = plot.select(".legend")
+      .attr("transform", "translate(" + legendPos.x + ",0)");
+
+    var leg_keys = legend.selectAll("g.key")
+      .data(colorScale.domain().reverse(),function(d){return d})
+     
+    var newkeys=leg_keys
+      .enter().append("g")
+      .attr("class", "key")  
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+    newkeys.append("rect")
+        .attr("width", 18)
+        .attr("height", 18)
+       
+    leg_keys.select("rect")
+        .style("fill", colorScale);
+ 
+    newkeys.append("text")
+        .attr("x", 30)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "start")
+       
+    leg_keys.select("text")
+        .text(function(d) { return d; });
+       
+    leg_keys
+        .exit().remove()
+
+  }
+  
   function updateView(message) {
 
     var svg = d3.select(".d3io").select("svg")
@@ -232,6 +260,7 @@
     var plot = svg.append("g")
     plot.append("g").attr("class","xaxis")
     plot.append("g").attr("class","yaxis")
+    plot.append("g").attr("class","legend")
     plot.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     lastMessage = message;
@@ -270,6 +299,7 @@
     // start drawing
     barDraw(plot,aesData,x,y,color)
     hierAxis(plot,h,hierColor,height,hieraxis_height)
+    legend(plot,color)
 
     plot.select(".yaxis")
       .call(yAxis)
