@@ -1,9 +1,22 @@
-USArrests structured data with aesthetic to D3 bar chart with hierarchical x-axis
+Shiny+d3: structured R data with aesthetic to D3 bar chart with hierarchical x-axis
 =================================================================================
 
 The following plot is a demo of shiny + d3 (hosted at http://glimmer.rstudio.com/alexbbrown/USArrestsWide/) 
 
-It shows how by adding structure metadata to a (melted) data table passed to the client we can start to build a client which flexibly displays different data.
+It shows how by adding structure metadata to a (melted) data table passed to the client we can start to build a client
+which flexibly displays different data.
+
+In this case the data is produced from minimal processing of R data()'s USArrests database, with a little extra from
+data()'s states*.
+
+Understanding the code:
+======================
+
+This is an RStudio Shiny project, so it follows those conventions.  To support RStudio's glimmer platform, the crucial
+javascript client is in the WWW directory.  Here's what the important files do:
+
+ * server.R: prepares and delivers the data set and annotations
+ * WWW/d3widget.js: the javascript client, which receives the data and plots the output
 
 Preparing the data
 ==================
