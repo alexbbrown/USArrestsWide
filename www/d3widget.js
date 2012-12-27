@@ -52,11 +52,11 @@
   
   // build x position as a hierarchy diagram with size
   // width, height
-  function hierarchX(allData,xaesthetic,width,height) {
+  function hierarchX(allData,axisname,xaesthetic,width,height) {
     var nester = d3.nest()
     // load the nester with the xaesthetic keys.
     // if xaesthetic is 
-    var dataTree = {key:"All", values:
+    var dataTree = {key:axisname, values:
       _.keys(xaesthetic).reduce(
         function(nest,xkey){
           return nest.key(
@@ -148,21 +148,22 @@
   }
 
   // draw the hierarchical-x axis
-  function hierAxis(plot,axisParts,colorScale,y,height) {
+  function hierAxis(plot,axisParts,y,height) {
     
     function hasKeyFilter(key) { return function(d) { return _.has(d,key)}}
     
-    rect=plot.select(".xaxis")
+    var cells=plot.select(".xaxis")
        .attr("transform", "translate(0," + y + ")")
        .selectAll("g")
        .data(axisParts.filter(hasKeyFilter("key")))
     
     // construct the box elements of the hierarchy out of a g, rect, and an html object (for text wrapping)
-    rect
+    cells
       .enter()
-      .append("g")
+      .append("g").attr("class","hiercell")
       .each(function() {
         var s = d3.select(this)
+        s.append("rect").attr("class", "backbox")
         s.append("foreignObject").attr("class","htmltextF")
           .append("xhtml:body").attr("class","htmltext").attr("xmlns","http://www.w3.org/1999/xhtml")
         s.append("line").attr("class", "leftline tick")
@@ -173,30 +174,37 @@
           return "translate(" + d.x + "," + (height-d.y-d.dy) + ")"
         })
 
-    rect
-      .transition()
-      .attr("transform", function(d){
-          return "translate(" + d.x + "," + (height-d.y-d.dy) + ")"
-        })
-      .each(function(d) {
-        d3.select(this).select(".leftline")
+    // how to build the hierarchy cell
+    hierCell=function(d) {
+      cell=d3.select(this)
+      cell.select(".leftline")
           .attr("x1",0)
           .attr("y1",0)
           .attr("x2",0)
           .attr("y2",function(d) { return d.dy; })
-        d3.select(this).select(".rightline")
+      cell.select(".rightline")
           .attr("x1",function(d) { return d.dx; })
           .attr("y1",0)
           .attr("x2",function(d) { return d.dx; })
           .attr("y2",function(d) { return d.dy; })
-        return d;
-      })
+      cell.select(".backbox")
+        .attr("y",-0.5)
+        .attr("width", function(d) { return d.dx; })
+        .attr("height", function(d) { return d.dy; })
+    }
 
-     rect
+    cells
+      .transition()
+      .attr("transform", function(d){
+          return "translate(" + d.x + "," + (height-d.y-d.dy) + ")"
+        })
+      .each(hierCell)
+
+    cells
       .select("title")
       .text( function(d) { return d.key } );
        
-    rect
+    cells
       .select(".htmltextF")
       .attr("width", function(d) { return d.dx-2; })
       .attr("height", function(d) { return d.dy-1; })
@@ -208,7 +216,7 @@
       .style("text-align","center")
       .html(function(d) { return d.key; });
 
-    rect.exit()
+    cells.exit()
       .transition()
       .remove()
   }
@@ -271,7 +279,7 @@
     // derive effective structure of aesthetic
     aesStructure = applyAesthetic(message.aesthetic)(message.structure)
     // build the hierarchic x axis
-    h = hierarchX(aesData, aesStructure.X, width, hieraxis_height)
+    h = hierarchX(aesData, message.aesthetic.X, aesStructure.X, width, hieraxis_height)
     s = barStack(aesData, "group")
     
     
@@ -284,7 +292,6 @@
           .range([height, 0])
           .domain(d3.extent(aesData.concat({y:0}), function(d) { return ((d.y0+d.y)||d.y); })).nice();
     var color = d3.scale.category20();
-    var hierColor = d3.scale.category10();
     
     // Axes
     var xAxis = d3.svg.axis()
@@ -298,7 +305,7 @@
     
     // start drawing
     barDraw(plot,aesData,x,y,color)
-    hierAxis(plot,h,hierColor,height,hieraxis_height)
+    hierAxis(plot,h,height,hieraxis_height)
     legend(plot,color)
 
     plot.select(".yaxis")
