@@ -50,6 +50,28 @@
       )(aesthetic)
   }}
   
+  // build a nice gradient for the hierarchic axis background
+  function grayGradient(plot) {
+    var gradient = plot.append("defs")
+    .append("linearGradient")
+      .attr("id", "gradient")
+      .attr("x1", "100%")
+      .attr("y1", "0%")
+      .attr("x2", "100%")
+      .attr("y2", "100%")
+      .attr("spreadMethod", "pad");
+   
+    gradient.append("svg:stop")
+      .attr("offset", "0%")
+      .attr("stop-color", "silver")
+      .attr("stop-opacity", 1);
+   
+    gradient.append("svg:stop")
+      .attr("offset", "100%")
+      .attr("stop-color", "#fff")
+      .attr("stop-opacity", 1);
+  }
+  
   // build x position as a hierarchy diagram with size
   // width, height
   function hierarchX(allData,axisname,xaesthetic,width,height) {
@@ -66,13 +88,6 @@
     }
     
     function constantly(value) { return function() { return value } }
-    function maxdepth(maxdepth) { return function(d) { 
-      if (d.depth > maxdepth) { // this does nothing.  why?
-        return null
-      } else {
-        return d.values
-      }
-    }}
       
     // the height used for y partitioning needs to take into account the
     // values row (which we aren't using, and the All row, which isn't in
@@ -83,7 +98,7 @@
       .value(constantly(1))
       .sort(null)
       .size([width, adjustedHeight])
-      .children(maxdepth(xaesthetic.length-1))
+      .children(function(d){ return d.values })
       
     // note: x and y of allData are blown away by this.
     return partition.nodes(dataTree)
@@ -148,14 +163,22 @@
   }
 
   // draw the hierarchical-x axis
-  function hierAxis(plot,axisParts,y,height) {
+  function hierAxis(plot,axisParts,y,width,height) {
     
     function hasKeyFilter(key) { return function(d) { return _.has(d,key)}}
     
-    var cells=plot.select(".xaxis")
+    var axisGroup=plot.select(".xaxis")
        .attr("transform", "translate(0," + y + ")")
-       .selectAll("g")
-       .data(axisParts.filter(hasKeyFilter("key")))
+  
+    axisGroup.append("rect")
+      .style("fill","url(#gradient)")
+      .attr("y",1)
+      .attr("width",width)
+      .attr("height",height)
+       
+    var cells=axisGroup
+      .selectAll("g")
+      .data(axisParts.filter(hasKeyFilter("key")))
     
     // construct the box elements of the hierarchy out of a g, rect, and an html object (for text wrapping)
     cells
@@ -163,7 +186,6 @@
       .append("g").attr("class","hiercell")
       .each(function() {
         var s = d3.select(this)
-        s.append("rect").attr("class", "backbox")
         s.append("foreignObject").attr("class","htmltextF")
           .append("xhtml:body").attr("class","htmltext").attr("xmlns","http://www.w3.org/1999/xhtml")
         s.append("line").attr("class", "leftline tick")
@@ -187,10 +209,6 @@
           .attr("y1",0)
           .attr("x2",function(d) { return d.dx; })
           .attr("y2",function(d) { return d.dy; })
-      cell.select(".backbox")
-        .attr("y",-0.5)
-        .attr("width", function(d) { return d.dx; })
-        .attr("height", function(d) { return d.dy; })
     }
 
     cells
@@ -265,6 +283,7 @@
     var height=svg.node().clientHeight-margin.bottom-margin.top
     var width=svg.node().clientWidth-margin.left-margin.right
 
+    grayGradient(svg)
     var plot = svg.append("g")
     plot.append("g").attr("class","xaxis")
     plot.append("g").attr("class","yaxis")
@@ -305,7 +324,7 @@
     
     // start drawing
     barDraw(plot,aesData,x,y,color)
-    hierAxis(plot,h,height,hieraxis_height)
+    hierAxis(plot,h,height,width,hieraxis_height)
     legend(plot,color)
 
     plot.select(".yaxis")
