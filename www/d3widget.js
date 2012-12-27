@@ -274,6 +274,7 @@
 
   }
   
+  // This is the main control function
   function updateView(message) {
 
     var svg = d3.select(".d3io").select("svg")
