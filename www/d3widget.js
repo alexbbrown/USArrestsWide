@@ -1,9 +1,4 @@
 (function(){
-  // Probably not idiomatic javascript.
-
-  this.countValue=42;
-  this.lastMessage=undefined;
-  this.lastData=undefined;
   
   // decode an input data set from a message
   function decodeData(message) {
@@ -291,11 +286,10 @@
     plot.append("g").attr("class","legend")
     plot.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    lastMessage = message;
     // generate col major structured records
-    lastData = decodeData(message);
+    data = decodeData(message);
     // create records with fields x,y,group from data
-    aesData = lastData.map(applyAesthetic(message.aesthetic))
+    aesData = data.map(applyAesthetic(message.aesthetic))
     // derive effective structure of aesthetic
     aesStructure = applyAesthetic(message.aesthetic)(message.structure)
     // build the hierarchic x axis
@@ -360,7 +354,7 @@
       return $(scope).find(".d3io");
     },
     getValue: function(el) {
-      return countValue;
+      return null; // not used at the moment
     },
     subscribe: function(el, callback) {
       $(el).on("change.d3InputBinding", function(e) {
